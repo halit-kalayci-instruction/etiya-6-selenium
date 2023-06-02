@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pytest
+import openpyxl
 #debugging
 #breakpoint => kodu debug modda iken bekleteceğimiz satır
 
@@ -19,7 +20,15 @@ class TestEtiya():
         self.driver.quit()
 
     def readDataFromExcel():
-        print('x')
+        excelFile = openpyxl.load_workbook("data/userFailData.xlsx")
+        sheet = excelFile["Sheet1"]
+        rows = sheet.max_row # sayfadaki max. satırı alır.
+        data = []
+        for i in range(2,rows):
+            username = sheet.cell(i, 1).value
+            password = sheet.cell(i, 2).value
+            data.append((username,password))
+        return data
 
     def test_header(self):
         logo = self.driver.find_element(By.CLASS_NAME, 'login_logo')
@@ -28,11 +37,14 @@ class TestEtiya():
     #bu test aynı anda 3 veriyle çalışsın.
     # abc-123  deneme-12345  etiya-etiya
     # annotation
-    @pytest.mark.parametrize("username,password",[("abc","123"), ("deneme","secret_sauce"), ("etiya","etiya")])
+
+    
+    @pytest.mark.parametrize("username,password",readDataFromExcel())
     def test_login_invalid(self,username,password):
         loginBtn = self.driver.find_element(By.ID, 'login-button')
         usernameInput = self.driver.find_element(By.ID, "user-name")
         passwordInput = self.driver.find_element(By.ID,"password")
+        usernameInput.click()
         usernameInput.send_keys(username)
         passwordInput.send_keys(password)
         loginBtn.click()
